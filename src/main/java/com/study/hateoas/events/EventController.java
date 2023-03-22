@@ -13,11 +13,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "/api/events", produces = MediaTypes.HAL_JSON_VALUE)
 public class EventController {
+    private final EventRepository eventRepository;
+
+    public EventController(final EventRepository eventRepository) {
+        this.eventRepository = eventRepository;
+    }
+
     @PostMapping
     public ResponseEntity createEvent(@RequestBody final Event event) {
-        final URI createdUri = linkTo(EventController.class).slash("{id}").toUri();
-        event.setId(1);
-        return ResponseEntity.created(createdUri).body(event);
+        final Event savedEvent = eventRepository.save(event);
+        final URI createdUri = linkTo(EventController.class).slash(savedEvent.getId()).toUri();
+        return ResponseEntity.created(createdUri).body(savedEvent);
     }
 
 }
