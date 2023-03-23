@@ -8,7 +8,7 @@ Spring Boot 3.0.4
 
 Java 17
 
-### `WebMvcTest`
+### `@WebMvcTest`
 
 웹 관련된 빈만 등록해서 컨트롤러쪽만 테스트할 수 있게 도와주는 애노테이션
 
@@ -27,3 +27,11 @@ Java 17
 DTO와 Entity를 매핑할 때 귀찮게 변환 메소드를 만들지 않아도 된다. 
 
 다만 의존성이 추가된다는 단점이 있고 변환 과정이 Reflection을 이용하기 때문에 성능을 고려해야 한다.
+
+### `@AutoConfigureMockMvc`
+
+실습 환경에서 구현체의 너무 의존하는 Mocking의 단점이 나타나 통합 테스트로 전환하는 과정을 진행했다.
+
+이 과정에서 `@WebMvcTest`를 `@SpringBootTest`로 변경하고 `@AutoConfigureMockMvc`를 추가했다.
+
+`@AutoConfigureMockMvc`는 `@SpringBootTest`와 함께 사용되며 HTTP 요청과 응답을 Mocking 해주는 `MockMvc` 객체를 자동구성해준다. 
