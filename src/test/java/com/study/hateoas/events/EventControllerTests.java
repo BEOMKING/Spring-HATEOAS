@@ -57,7 +57,7 @@ class EventControllerTests {
     }
 
     @Test
-    void 잘못된_요청이_들어오면_400에러를_반환한다() throws Exception {
+    void 불필요한_데이터가_함께_들어오면_400에러를_반환한다() throws Exception {
         // Given
         final Event event = Event.builder()
             .id(100)
@@ -80,6 +80,66 @@ class EventControllerTests {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .accept(MediaTypes.HAL_JSON)
                 .content(objectMapper.writeValueAsString(event)))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 유효하지않은_정보가_들어오면_400에러를_반환한다() throws Exception {
+        // Given
+        final EventDto eventDto = EventDto.builder()
+            .name("Spring Rest API 교육")
+            .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 9, 0))
+            .closeEnrollmentDateTime(LocalDateTime.of(2023, 3, 1, 9, 0))
+            .beginEventDateTime(LocalDateTime.of(2023, 3, 13, 16, 0))
+            .endEventDateTime(LocalDateTime.of(2023, 4, 27, 17, 0))
+            .location("Think More")
+            .build();
+
+        // When & Then
+        mockMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(eventDto))
+                .accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 날짜값이_유효하지_않으면_400에러를_반환한다() throws Exception {
+        // Given
+        final EventDto eventDto1 = EventDto.builder()
+            .name("Spring Rest API 교육")
+            .description("REST API Development with Spring")
+            .beginEnrollmentDateTime(LocalDateTime.of(2023, 2, 1, 9, 0))
+            .closeEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 9, 0))
+            .beginEventDateTime(LocalDateTime.of(2023, 4, 13, 16, 0))
+            .endEventDateTime(LocalDateTime.of(2023, 4, 27, 17, 0))
+            .location("Think More")
+            .build();
+
+        final EventDto eventDto2 = EventDto.builder()
+            .name("Spring Rest API 교육")
+            .description("REST API Development with Spring")
+            .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 9, 0))
+            .closeEnrollmentDateTime(LocalDateTime.of(2023, 2, 1, 9, 0))
+            .beginEventDateTime(LocalDateTime.of(2023, 7, 13, 16, 0))
+            .endEventDateTime(LocalDateTime.of(2023, 4, 27, 17, 0))
+            .location("Think More")
+            .build();
+
+        // When & Then
+        mockMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(eventDto1))
+                .accept(MediaTypes.HAL_JSON_VALUE))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(eventDto2))
+                .accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
             .andExpect(status().isBadRequest());
     }

@@ -35,3 +35,10 @@ DTO와 Entity를 매핑할 때 귀찮게 변환 메소드를 만들지 않아도
 이 과정에서 `@WebMvcTest`를 `@SpringBootTest`로 변경하고 `@AutoConfigureMockMvc`를 추가했다.
 
 `@AutoConfigureMockMvc`는 `@SpringBootTest`와 함께 사용되며 HTTP 요청과 응답을 Mocking 해주는 `MockMvc` 객체를 자동구성해준다. 
+
+### Validation
+
+객체의 유효성을 검증하는데 도움을 주는 라이브러리
+
+`@Valid`를 사용하면 `@NotNull` `@NotEmpty` `@NotBlank`.. 등등 더 많은 검증 애노테이션이 붙은 객체의 필드에 대한 검증을 할 수 있다.
+    
