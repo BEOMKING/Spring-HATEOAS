@@ -28,8 +28,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // DTO <-> Entity를 쉽게 변환하기 위한 라이브러리
+    // DTO <-> Entity 쉽게 변환하기 위한 라이브러리
     implementation 'org.modelmapper:modelmapper:3.1.1'
+
+    // Validation 관련 라이브러리
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.h2database:h2'
