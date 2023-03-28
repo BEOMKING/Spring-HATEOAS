@@ -55,4 +55,32 @@ class EventControllerTests {
             .andExpect(jsonPath("free").value(false))
             .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
     }
+
+    @Test
+    void 잘못된_요청이_들어오면_400에러를_반환한다() throws Exception {
+        // Given
+        final Event event = Event.builder()
+            .id(100)
+            .name("Spring")
+            .description("REST API Development with Spring")
+            .beginEnrollmentDateTime(LocalDateTime.of(2023, 3, 22, 23, 30))
+            .closeEnrollmentDateTime(LocalDateTime.of(2023, 3, 23, 23, 30))
+            .beginEventDateTime(LocalDateTime.of(2023, 3, 24, 23, 30))
+            .endEventDateTime(LocalDateTime.of(2023, 3, 25, 23, 30))
+            .basePrice(100)
+            .maxPrice(200)
+            .limitOfEnrollment(100)
+            .location("Think More")
+            .free(true)
+            .offline(false)
+            .build();
+
+        // When & Then
+        mockMvc.perform(post("/api/events")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(event)))
+            .andDo(print())
+            .andExpect(status().isBadRequest());
+    }
 }
