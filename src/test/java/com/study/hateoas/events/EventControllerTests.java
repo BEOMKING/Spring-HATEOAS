@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +28,7 @@ class EventControllerTests {
     ObjectMapper objectMapper;
 
     @Test
+    @DisplayName("정상적인 요청이 들어오면 201을 반환한다")
     void createEvent() throws Exception {
         // Given
         final EventDto eventDto = EventDto.builder()
