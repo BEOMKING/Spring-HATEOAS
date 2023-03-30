@@ -104,7 +104,10 @@ class EventControllerTests {
                 .content(objectMapper.writeValueAsString(eventDto))
                 .accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$[0].objectName").exists())
+            .andExpect(jsonPath("$[0].defaultMessage").exists())
+            .andExpect(jsonPath("$[0].code").exists());
     }
 
     @Test
@@ -136,13 +139,19 @@ class EventControllerTests {
                 .content(objectMapper.writeValueAsString(eventDto1))
                 .accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$[0].objectName").exists())
+            .andExpect(jsonPath("$[0].defaultMessage").exists())
+            .andExpect(jsonPath("$[0].code").exists());
 
         mockMvc.perform(post("/api/events")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(objectMapper.writeValueAsString(eventDto2))
                 .accept(MediaTypes.HAL_JSON_VALUE))
             .andDo(print())
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$[0].objectName").exists())
+            .andExpect(jsonPath("$[0].defaultMessage").exists())
+            .andExpect(jsonPath("$[0].code").exists());
     }
 }
