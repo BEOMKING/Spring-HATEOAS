@@ -2,8 +2,12 @@ package com.study.hateoas.events;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.stream.Stream;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -109,4 +113,29 @@ class EventTest {
 		assertThat(event.isOffline()).isFalse();
 	}
 
+	@ParameterizedTest
+	@MethodSource("parametersForReturnFalseIfBasePriceAndMaxPriceHasValue")
+	@DisplayName("BasePrice와 MaxPrice가 모두 0이면 무료, 아니면 무료가 아니다.")
+	void returnFalseIfBasePriceAndMaxPriceHasValue(final int basePrice, final int maxPrice, final boolean isFree) {
+		// Given
+		final Event event = Event.builder()
+				.basePrice(basePrice)
+				.maxPrice(maxPrice)
+				.build();
+
+		// When
+		event.update();
+
+		// Then
+		assertThat(event.isFree()).isEqualTo(isFree);
+	}
+
+	private static Stream<Arguments> parametersForReturnFalseIfBasePriceAndMaxPriceHasValue() {
+		return Stream.of(
+				Arguments.of(0, 0, true),
+				Arguments.of(100, 0, false),
+				Arguments.of(0, 100, false),
+				Arguments.of(100, 200, false)
+		);
+	}
 }
