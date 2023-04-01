@@ -5,7 +5,9 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import jakarta.validation.Valid;
 import java.net.URI;
 import org.modelmapper.ModelMapper;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +30,7 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createEvent(@RequestBody @Valid final EventDto eventDto, final Errors errors) {
+    public ResponseEntity createEvent(@RequestBody @Valid final EventDto eventDto, final Errors errors) {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().body(errors);
         }
@@ -40,7 +42,14 @@ public class EventController {
 
         final Event savedEvent = eventRepository.save(modelMapper.map(eventDto, Event.class));
         savedEvent.update();
-        final URI createdUri = linkTo(EventController.class).slash(savedEvent.getId()).toUri();
-        return ResponseEntity.created(createdUri).body(savedEvent);
+
+        final WebMvcLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(savedEvent.getId());
+        final URI createdUri = selfLinkBuilder.toUri();
+        final EntityModel<Event> eventResource = EntityModel.of(savedEvent);
+        eventResource.add(selfLinkBuilder.slash(savedEvent).withSelfRel());
+        eventResource.add(selfLinkBuilder.withRel("query-events"));
+        eventResource.add(selfLinkBuilder.withRel("update-event"));
+
+        return ResponseEntity.created(createdUri).body(eventResource);
     }
 }
