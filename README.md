@@ -49,3 +49,70 @@ DTO와 Entity를 매핑할 때 귀찮게 변환 메소드를 만들지 않아도
 만약 테스트를 작성한다면 이를 통합 테스트말고 단위 테스트로 작성하는 것은 어떤가? 라는 생각이 들었다.
 
 현재 드는 생각이 정말 비즈니스적으로 우선순위가 높은 것들만 테스트를 작성하고 하더라도 단위 테스트로 충분할 것 같다.
+
+### `Spring Rest Docs`
+
+`MockMvc` `RestAssured` 같은 API에 테스트 라이브러리를 이용해 작성된 스니펫을 기반으로 API 문서를 작성해주는 라이브러리
+
+기본적으로 테스트 코드가 강제되는 것도 장점이고 테스트 코드가 통과하지 않으면 빌드가 실패하기 때문에 테스트 코드로 문서를 검증할 수 있는 것도 장점이 될 수 있다.
+
+`Swagger` 와 달리 프로덕션 코드에 애노테이션이 추가되는 것은 아니기 때문에 가독성에 해를 끼치지 않는다.
+
+Gradle 기준으로 설정은 다음과 같이 필요하다.
+
+Spring Boot 3.0.4, Gradle 7.6.1 버전을 기준으로 하기 때문에 Maven이나 하위 버전은 변동이 크다.
+
+```groovy
+// build.gradle 기본적으로 사용되는 설정들이 더 있으나 여기서는 Rest Docs 관련 설정들만 기입
+
+plugins {
+		// Gradle 7.0 이상부터는 org.asciidoctor.convert 말고 아래와 같이 사용
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
+}
+
+sourceCompatibility = '17'
+
+configurations {
+    asciidoctorExt
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
+}
+
+dependencies {
+    // Asciidoctor
+    asciidoctorExt 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+
+    // MockMvc RestDocs
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+}
+
+tasks.named('test') {
+    outputs.dir snippetsDir
+    useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    configurations 'asciidoctorExt'
+		// 두 개의 configurations는 다른 설정이다. 위처럼 해야 한다.
+		//configurations {
+		//	'asciidoctorExt'
+		//}
+    dependsOn test
+}
+
+bootJar {
+    dependsOn asciidoctor
+    from ("${asciidoctor.outputDir}/html5") {
+        into 'static/docs'
+    }
+}
+```
+
+src/docs/asciidoc 의 하위에 adoc 파일을 생성해야 한다. 이건 해당 디렉터리 참조
