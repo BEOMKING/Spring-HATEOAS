@@ -1,9 +1,13 @@
 package com.study.hateoas.events;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+import com.study.hateoas.index.IndexController;
 import jakarta.validation.Valid;
+
 import java.net.URI;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -24,7 +28,7 @@ public class EventController {
     private final EventValidator eventValidator;
 
     public EventController(final EventRepository eventRepository, final ModelMapper modelMapper,
-        final EventValidator eventValidator) {
+                           final EventValidator eventValidator) {
         this.eventRepository = eventRepository;
         this.modelMapper = modelMapper;
         this.eventValidator = eventValidator;
@@ -33,12 +37,12 @@ public class EventController {
     @PostMapping
     public ResponseEntity createEvent(@RequestBody @Valid final EventDto eventDto, final Errors errors) {
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(errors);
+            return ResponseEntity.badRequest().body(EntityModel.of(errors, linkTo(methodOn(IndexController.class).index()).withRel("index")));
         }
 
         eventValidator.validate(eventDto, errors);
         if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(errors);
+            return ResponseEntity.badRequest().body(EntityModel.of(errors, linkTo(methodOn(IndexController.class).index()).withRel("index")));
         }
 
         final Event savedEvent = eventRepository.save(modelMapper.map(eventDto, Event.class));

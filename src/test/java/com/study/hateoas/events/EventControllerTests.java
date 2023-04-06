@@ -1,5 +1,6 @@
 package com.study.hateoas.events;
 
+import com.study.hateoas.SpringTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.hateoas.MediaTypes;
@@ -44,7 +45,7 @@ class EventControllerTests extends SpringTestSupport {
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("id").exists())
 				.andExpect(header().exists(HttpHeaders.LOCATION))
-				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
+				.andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE + ";charset=UTF-8"))
 				.andExpect(jsonPath("free").value(false))
 				.andExpect(jsonPath("offline").value(true))
 				.andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
@@ -146,9 +147,10 @@ class EventControllerTests extends SpringTestSupport {
 						.accept(MediaTypes.HAL_JSON_VALUE))
 				.andDo(print())
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$[0].objectName").exists())
-				.andExpect(jsonPath("$[0].defaultMessage").exists())
-				.andExpect(jsonPath("$[0].code").exists());
+				.andExpect(jsonPath("errors[0].objectName").exists())
+				.andExpect(jsonPath("errors[0].defaultMessage").exists())
+				.andExpect(jsonPath("errors[0].code").exists())
+				.andExpect(jsonPath("_links.index").exists());
 	}
 
 	@Test
@@ -180,18 +182,20 @@ class EventControllerTests extends SpringTestSupport {
 						.accept(MediaTypes.HAL_JSON_VALUE))
 				.andDo(print())
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$[0].objectName").exists())
-				.andExpect(jsonPath("$[0].defaultMessage").exists())
-				.andExpect(jsonPath("$[0].code").exists());
+				.andExpect(jsonPath("errors[0].objectName").exists())
+				.andExpect(jsonPath("errors[0].defaultMessage").exists())
+				.andExpect(jsonPath("errors[0].code").exists())
+				.andExpect(jsonPath("_links.index").exists());
 
 		mockMvc.perform(post("/api/events").contentType(MediaType.APPLICATION_JSON_VALUE)
 						.content(objectMapper.writeValueAsString(eventDto2))
 						.accept(MediaTypes.HAL_JSON_VALUE))
 				.andDo(print())
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$[0].objectName").exists())
-				.andExpect(jsonPath("$[0].defaultMessage").exists())
-				.andExpect(jsonPath("$[0].code").exists());
+				.andExpect(jsonPath("errors[0].objectName").exists())
+				.andExpect(jsonPath("errors[0].defaultMessage").exists())
+				.andExpect(jsonPath("errors[0].code").exists())
+				.andExpect(jsonPath("_links.index").exists());
 	}
 }
 
