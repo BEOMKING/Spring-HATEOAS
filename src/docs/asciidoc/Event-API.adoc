@@ -4,3 +4,7 @@
 [[Event-생성]]
 === 이벤트 생성
 operation::create-event[snippets='http-request,http-response,request-headers,request-body,request-fields,response-headers,response-body,response-fields']
+
+[[Event-조회]]
+=== 이벤트 조회
+operation::query-events[snippets='http-request,http-response,query-parameters,response-body,response-fields']
