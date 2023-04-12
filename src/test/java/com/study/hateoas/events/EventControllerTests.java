@@ -266,13 +266,60 @@ class EventControllerTests extends SpringTestSupport {
                                 fieldWithPath("page.number").description("현재 페이지 번호"))));
     }
 
-    private void generateEvent(final int index) {
+    @Test
+    @DisplayName("존재하는 이벤트에 대한 조회를 하면 해당 이벤트를 조회한다.")
+    void getEvent() throws Exception {
+        // Given
+        final Event event = this.generateEvent(1);
+
+        // When & Then
+        this.mockMvc.perform(get("/api/events/{id}", event.getId()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("name").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("query-event",
+                        links(
+                                linkWithRel("self").description("현재 페이지"),
+                                linkWithRel("profile").description("API 문서 링크")
+                        ),
+                        relaxedResponseFields(
+                                fieldWithPath("id").description("이벤트 ID"),
+                                fieldWithPath("name").description("이벤트 이름"),
+                                fieldWithPath("description").description("이벤트 설명"),
+                                fieldWithPath("beginEnrollmentDateTime").description("이벤트 등록 시작일"),
+                                fieldWithPath("closeEnrollmentDateTime").description("이벤트 등록 종료일"),
+                                fieldWithPath("beginEventDateTime").description("이벤트 시작일"),
+                                fieldWithPath("endEventDateTime").description("이벤트 종료일"),
+                                fieldWithPath("location").description("이벤트 장소"),
+                                fieldWithPath("basePrice").description("이벤트 기본 가격"),
+                                fieldWithPath("maxPrice").description("이벤트 최대 가격"),
+                                fieldWithPath("limitOfEnrollment").description("이벤트 등록 제한"),
+                                fieldWithPath("offline").description("오프라인 여부"),
+                                fieldWithPath("free").description("무료 여부"),
+                                fieldWithPath("_links.self.href").description("이벤트 링크").ignored(),
+                                fieldWithPath("_links.profile.href").description("API 문서 링크").ignored() ))
+                );
+    }
+
+    @Test
+    @DisplayName("없는 이벤트를 조회하면 404 응답을 받는다.")
+    void return404WhenEventNotFound() throws Exception {
+        // When & Then
+        this.mockMvc.perform(get("/api/events/12345"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    private Event generateEvent(final int index) {
         final Event event = Event.builder()
                 .name("event" + index)
                 .description("Test Event")
                 .build();
 
-        this.eventRepository.save(event);
+        return this.eventRepository.save(event);
     }
 }
 

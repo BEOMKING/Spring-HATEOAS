@@ -16,6 +16,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -65,5 +66,20 @@ public class EventController {
         final PagedModel<EntityModel<Event>> model = assembler.toModel(events, e -> EntityModel.of(e, linkTo(EventController.class).slash(e.getId()).withSelfRel()));
         model.add(Link.of("/docs/index.html#resources-events-list").withRel("profile"));
         return ResponseEntity.ok(model);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity queryEvent(@PathVariable final Integer id) {
+        final Optional<Event> event = this.eventRepository.findById(id);
+
+        if (event.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        final EntityModel<Event> eventResource = EntityModel.of(event.get());
+        eventResource.add(linkTo(EventController.class).slash(event.get().getId()).withSelfRel());
+        eventResource.add(Link.of("/docs/index.html#resources-events-get").withRel("profile"));
+
+        return ResponseEntity.ok(eventResource);
     }
 }
