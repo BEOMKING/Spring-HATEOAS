@@ -82,4 +82,22 @@ public class EventController {
 
         return ResponseEntity.ok(eventResource);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity putEvent(@PathVariable("id") final Integer id, @RequestBody @Valid final EventDto eventDto) {
+        final Optional<Event> result = this.eventRepository.findById(id);
+
+        if (result.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        final Event event = result.get();
+        event.change(eventDto);
+
+        final EntityModel<Event> eventResource = EntityModel.of(event);
+        eventResource.add(linkTo(EventController.class).slash(event.getId()).withSelfRel());
+        eventResource.add(Link.of("/docs/index.html#resources-events-update").withRel("profile"));
+
+        return ResponseEntity.ok(eventResource);
+    }
 }

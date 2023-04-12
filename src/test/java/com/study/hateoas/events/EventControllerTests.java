@@ -20,8 +20,7 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.li
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -300,7 +299,7 @@ class EventControllerTests extends SpringTestSupport {
                                 fieldWithPath("offline").description("오프라인 여부"),
                                 fieldWithPath("free").description("무료 여부"),
                                 fieldWithPath("_links.self.href").description("이벤트 링크").ignored(),
-                                fieldWithPath("_links.profile.href").description("API 문서 링크").ignored() ))
+                                fieldWithPath("_links.profile.href").description("API 문서 링크").ignored()))
                 );
     }
 
@@ -311,6 +310,90 @@ class EventControllerTests extends SpringTestSupport {
         this.mockMvc.perform(get("/api/events/12345"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("존재하는 이벤트에 대한 수정을 하면 해당 이벤트를 수정하고 수정된 이벤트를 반환한다.")
+    void returnModifiedEventWhenEventIsExist() throws Exception {
+        // Given
+        final Event event = Event.builder()
+                .name("Rest API 교육")
+                .description("사내 교육")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 0, 0))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 1, 31, 0, 0))
+                .beginEventDateTime(LocalDateTime.of(2023, 2, 1, 0, 0))
+                .endEventDateTime(LocalDateTime.of(2023, 2, 28, 0, 0))
+                .limitOfEnrollment(10)
+                .location("Think More")
+                .build();
+        final Event createdEvent = this.eventRepository.save(event);
+        final EventDto modifiedEventDto = EventDto.builder()
+                .name("Rest API 교육")
+                .description("사내 교육 상급반")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 0, 0))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 1, 31, 0, 0))
+                .beginEventDateTime(LocalDateTime.of(2023, 2, 1, 0, 0))
+                .endEventDateTime(LocalDateTime.of(2023, 2, 28, 0, 0))
+                .limitOfEnrollment(15)
+                .location("CC5")
+                .build();
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", createdEvent.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(modifiedEventDto)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("description").value(modifiedEventDto.getDescription()))
+                .andExpect(jsonPath("beginEnrollmentDateTime").exists())
+                .andExpect(jsonPath("closeEnrollmentDateTime").exists())
+                .andExpect(jsonPath("beginEventDateTime").exists())
+                .andExpect(jsonPath("endEventDateTime").exists())
+                .andExpect(jsonPath("limitOfEnrollment").value(modifiedEventDto.getLimitOfEnrollment()))
+                .andExpect(jsonPath("location").value(modifiedEventDto.getLocation()))
+                .andExpect(jsonPath("offline").value(true))
+                .andExpect(jsonPath("free").exists())
+                .andExpect(jsonPath("basePrice").exists())
+                .andExpect(jsonPath("maxPrice").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("put-event",
+                                links(
+                                        linkWithRel("self").description("현재 페이지"),
+                                        linkWithRel("profile").description("API 문서 링크")
+                                ),
+                                requestFields(
+                                        fieldWithPath("name").description("변경할 이벤트 이름"),
+                                        fieldWithPath("description").description("변경할 이벤트 설명"),
+                                        fieldWithPath("beginEnrollmentDateTime").description("변경할 이벤트 등록 시작일"),
+                                        fieldWithPath("closeEnrollmentDateTime").description("변경할 이벤트 등록 종료일"),
+                                        fieldWithPath("beginEventDateTime").description("변경할 이벤트 시작일"),
+                                        fieldWithPath("endEventDateTime").description("변경할 이벤트 종료일"),
+                                        fieldWithPath("location").description("변경할 이벤트 장소"),
+                                        fieldWithPath("limitOfEnrollment").description("변경할 이벤트 등록 제한"),
+                                        fieldWithPath("basePrice").description("변경할 이벤트 기본 가격"),
+                                        fieldWithPath("maxPrice").description("변경할 이벤트 최대 가격")
+                                ),
+                                responseFields(
+                                        fieldWithPath("id").description("이벤트 ID"),
+                                        fieldWithPath("name").description("변경된 이벤트 이름"),
+                                        fieldWithPath("description").description("변경된 이벤트 설명"),
+                                        fieldWithPath("beginEnrollmentDateTime").description("변경된 이벤트 등록 시작일"),
+                                        fieldWithPath("closeEnrollmentDateTime").description("변경된 이벤트 등록 종료일"),
+                                        fieldWithPath("beginEventDateTime").description("변경된 이벤트 시작일"),
+                                        fieldWithPath("endEventDateTime").description("변경된 이벤트 종료일"),
+                                        fieldWithPath("location").description("변경된 이벤트 장소"),
+                                        fieldWithPath("basePrice").description("변경된 이벤트 기본 가격"),
+                                        fieldWithPath("maxPrice").description("변경된 이벤트 최대 가격"),
+                                        fieldWithPath("limitOfEnrollment").description("변경된 이벤트 등록 제한"),
+                                        fieldWithPath("offline").description("오프라인 여부"),
+                                        fieldWithPath("free").description("무료 여부"),
+                                        fieldWithPath("eventStatus").description("이벤트 상태"),
+                                        fieldWithPath("_links.self.href").description("이벤트 링크").ignored(),
+                                        fieldWithPath("_links.profile.href").description("API 문서 링크").ignored())
+                        )
+                );
     }
 
     private Event generateEvent(final int index) {
