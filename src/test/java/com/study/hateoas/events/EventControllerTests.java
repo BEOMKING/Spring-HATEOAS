@@ -396,6 +396,29 @@ class EventControllerTests extends SpringTestSupport {
                 );
     }
 
+    @Test
+    @DisplayName("존재하지 않는 이벤트에 대한 수정을 하면 404 응답을 받는다.")
+    void return404WhenEventIsNotExist() throws Exception {
+        // Given
+        final EventDto modifiedEventDto = EventDto.builder()
+                .name("Rest API 교육")
+                .description("사내 교육 상급반")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 0, 0))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 1, 31, 0, 0))
+                .beginEventDateTime(LocalDateTime.of(2023, 2, 1, 0, 0))
+                .endEventDateTime(LocalDateTime.of(2023, 2, 28, 0, 0))
+                .limitOfEnrollment(15)
+                .location("CC5")
+                .build();
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/12345")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(modifiedEventDto)))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
     private Event generateEvent(final int index) {
         final Event event = Event.builder()
                 .name("event" + index)
