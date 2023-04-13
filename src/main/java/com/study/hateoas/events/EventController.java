@@ -6,16 +6,15 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.*;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -63,6 +62,18 @@ public class EventController {
     @GetMapping
     public ResponseEntity queryEvents(final Pageable pageable, final PagedResourcesAssembler<Event> assembler) {
         final Page<Event> events = this.eventRepository.findAll(pageable);
+        final PagedModel<EntityModel<Event>> model = assembler.toModel(events, e -> EntityModel.of(e, linkTo(EventController.class).slash(e.getId()).withSelfRel()));
+        model.add(Link.of("/docs/index.html#resources-events-list").withRel("profile"));
+        return ResponseEntity.ok(model);
+    }
+
+    @GetMapping("/search/base-price")
+    public ResponseEntity queryByBasePrice(
+            @RequestParam("startBasePrice") final int startBasePrice,
+            @RequestParam("endBasePrice") final int endBasePrice,
+            final Pageable pageable,
+            final PagedResourcesAssembler<Event> assembler) {
+        final Page<Event> events = this.eventRepository.findByBasePriceBetween(startBasePrice, endBasePrice, pageable);
         final PagedModel<EntityModel<Event>> model = assembler.toModel(events, e -> EntityModel.of(e, linkTo(EventController.class).slash(e.getId()).withSelfRel()));
         model.add(Link.of("/docs/index.html#resources-events-list").withRel("profile"));
         return ResponseEntity.ok(model);

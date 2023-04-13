@@ -12,6 +12,8 @@ import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.hasValue;
 import static org.springframework.restdocs.headers.HeaderDocumentation.*;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
@@ -309,6 +311,75 @@ class EventControllerTests extends SpringTestSupport {
         this.mockMvc.perform(get("/api/events/12345"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("특정 가격의 이벤트를 조회한다.")
+    void returnEventByPrice() throws Exception {
+        // Given
+        IntStream.range(99, 201).forEach(i -> {
+            final Event event = Event.builder()
+                    .name("Rest API 교육" + i)
+                    .description("사내 교육" + i)
+                    .basePrice(i)
+                    .build();
+
+            this.eventRepository.save(event);
+        });
+
+        // When & Then
+        this.mockMvc.perform(get("/api/events/search/base-price")
+                        .param("startBasePrice", "100")
+                        .param("endBasePrice", "200")
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                // 결과 리스트의 크기
+                .andExpect(jsonPath("_embedded.eventList", hasSize(10)))
+                .andExpect(jsonPath("_embedded.eventList[0].basePrice").exists())
+                .andExpect(jsonPath("page.totalElements").value(101))
+                .andDo(document("search-events-by-base-price",
+                        links(
+                                linkWithRel("self").description("현재 페이지"),
+                                linkWithRel("profile").description("API 문서 링크"),
+                                linkWithRel("first").description("첫 페이지"),
+                                linkWithRel("prev").description("이전 페이지"),
+                                linkWithRel("next").description("다음 페이지"),
+                                linkWithRel("last").description("마지막 페이지")
+                        ),
+                        queryParameters(
+                                parameterWithName("startBasePrice").description("이벤트 기본 가격 시작"),
+                                parameterWithName("endBasePrice").description("이벤트 기본 가격 종료"),
+                                parameterWithName("page").description("페이지 번호"),
+                                parameterWithName("size").description("페이지 사이즈")
+                        ),
+                        responseFields(
+                                fieldWithPath("_embedded.eventList[].id").description("이벤트 ID"),
+                                fieldWithPath("_embedded.eventList[].name").description("이벤트 이름"),
+                                fieldWithPath("_embedded.eventList[].description").description("이벤트 설명"),
+                                fieldWithPath("_embedded.eventList[].beginEnrollmentDateTime").description("이벤트 등록 시작일"),
+                                fieldWithPath("_embedded.eventList[].closeEnrollmentDateTime").description("이벤트 등록 종료일"),
+                                fieldWithPath("_embedded.eventList[].beginEventDateTime").description("이벤트 시작일"),
+                                fieldWithPath("_embedded.eventList[].endEventDateTime").description("이벤트 종료일"),
+                                fieldWithPath("_embedded.eventList[].location").description("이벤트 장소"),
+                                fieldWithPath("_embedded.eventList[].basePrice").description("이벤트 기본 가격"),
+                                fieldWithPath("_embedded.eventList[].maxPrice").description("이벤트 최대 가격"),
+                                fieldWithPath("_embedded.eventList[].limitOfEnrollment").description("이벤트 등록 제한"),
+                                fieldWithPath("_embedded.eventList[].offline").description("오프라인 여부"),
+                                fieldWithPath("_embedded.eventList[].free").description("무료 여부"),
+                                fieldWithPath("_embedded.eventList[].eventStatus").description("이벤트 상태"),
+                                fieldWithPath("_embedded.eventList[]._links.self.href").description("이벤트 링크"),
+                                fieldWithPath("_links.first.href").description("첫 페이지 링크").ignored(),
+                                fieldWithPath("_links.prev.href").description("이전 페이지 링크").ignored(),
+                                fieldWithPath("_links.self.href").description("현재 페이지 링크").ignored(),
+                                fieldWithPath("_links.next.href").description("다음 페이지 링크").ignored(),
+                                fieldWithPath("_links.last.href").description("마지막 페이지 링크").ignored(),
+                                fieldWithPath("_links.profile.href").description("API 문서 링크").ignored(),
+                                fieldWithPath("page.size").description("페이지 사이즈"),
+                                fieldWithPath("page.totalElements").description("전체 개수"),
+                                fieldWithPath("page.totalPages").description("전체 페이지 수"),
+                                fieldWithPath("page.number").description("현재 페이지 번호"))));
     }
 
     @Test
