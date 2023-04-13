@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.headers.HeaderDocumentation;
-import org.springframework.restdocs.headers.ResponseHeadersSnippet;
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders;
 
 import java.time.LocalDateTime;
@@ -19,7 +17,8 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.li
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
-import static org.springframework.restdocs.request.RequestDocumentation.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -417,6 +416,65 @@ class EventControllerTests extends SpringTestSupport {
                         .content(this.objectMapper.writeValueAsString(modifiedEventDto)))
                 .andDo(print())
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("입력값이 비어있는 경우에 대한 수정을 하면 400 응답을 받는다.")
+    void return400WhenInputEmpty() throws Exception {
+        // Given
+        final Event event = Event.builder()
+                .name("Rest API 교육")
+                .description("사내 교육")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 0, 0))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 1, 31, 0, 0))
+                .beginEventDateTime(LocalDateTime.of(2023, 2, 1, 0, 0))
+                .endEventDateTime(LocalDateTime.of(2023, 2, 28, 0, 0))
+                .limitOfEnrollment(10)
+                .location("Think More")
+                .build();
+        final Event createdEvent = this.eventRepository.save(event);
+        final EventDto modifiedEventDto = EventDto.builder().build();
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", createdEvent.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(modifiedEventDto)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("입력값이 잘못된 경우에 대한 수정을 하면 400 응답을 받는다.")
+    void return400WhenInputWrong() throws Exception {
+        // Given
+        final Event event = Event.builder()
+                .name("Rest API 교육")
+                .description("사내 교육")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 0, 0))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 1, 31, 0, 0))
+                .beginEventDateTime(LocalDateTime.of(2023, 2, 1, 0, 0))
+                .endEventDateTime(LocalDateTime.of(2023, 2, 28, 0, 0))
+                .limitOfEnrollment(10)
+                .location("Think More")
+                .build();
+        final Event createdEvent = this.eventRepository.save(event);
+        final EventDto beginEventIsAfterThenEndEvent = EventDto.builder()
+                .name("Rest API 교육")
+                .description("사내 교육")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023, 1, 1, 0, 0))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023, 1, 31, 0, 0))
+                .beginEventDateTime(LocalDateTime.of(2023, 2, 1, 0, 0))
+                .endEventDateTime(LocalDateTime.of(2023, 1, 28, 0, 0))
+                .limitOfEnrollment(10)
+                .location("Think More")
+                .build();
+
+        // When & Then
+        this.mockMvc.perform(put("/api/events/{id}", createdEvent.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(beginEventIsAfterThenEndEvent)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 
     private Event generateEvent(final int index) {

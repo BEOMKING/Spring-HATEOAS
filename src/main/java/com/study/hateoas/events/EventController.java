@@ -84,7 +84,15 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity putEvent(@PathVariable("id") final Integer id, @RequestBody @Valid final EventDto eventDto) {
+    public ResponseEntity putEvent(@PathVariable("id") final Integer id, @RequestBody @Valid final EventDto eventDto, final Errors errors) {
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().body(EntityModel.of(errors, linkTo(methodOn(IndexController.class).index()).withRel("index")));
+        }
+        eventValidator.validate(eventDto, errors);
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().body(EntityModel.of(errors, linkTo(methodOn(IndexController.class).index()).withRel("index")));
+        }
+
         final Optional<Event> result = this.eventRepository.findById(id);
 
         if (result.isEmpty()) {
@@ -93,8 +101,9 @@ public class EventController {
 
         final Event event = result.get();
         event.change(eventDto);
+        final Event save = this.eventRepository.save(event);
 
-        final EntityModel<Event> eventResource = EntityModel.of(event);
+        final EntityModel<Event> eventResource = EntityModel.of(save);
         eventResource.add(linkTo(EventController.class).slash(event.getId()).withSelfRel());
         eventResource.add(Link.of("/docs/index.html#resources-events-update").withRel("profile"));
 
